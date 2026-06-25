@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  scrollbar-width: thin;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge, and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.globalTransition {
+  @apply transition-all duration-300 ease-out;
+}
+
+.bodyWhite {
+  @apply bg-[#fcffff];
+}
+
+.signinContainer {
+  @apply text-white pt-4 p-[2vw] md:p-[4vw] lg:py-[8px] lg:pl-[8px] grid place-items-center;
+}
+
+.modalBG {
+  @apply bg-black fixed z-30 inset-0 bg-opacity-50 backdrop-blur-sm  grid  place-items-center p-4 overflow-auto;
+}
+
+.longModalContainer {
+  @apply bg-white rounded-xl py-4 shadow-md w-full max-w-[496px];
+}
+
+.smallModalContainer {
+  @apply rounded-xl bg-white text-gray900 p-4 shadow-md max-w-[400px];
+}
+
+.globalIconBG {
+  @apply shadow-md bg-white h-[48px] w-[48px] grid rounded-xl border border-gray200 place-items-center;
+}
+
+.modalHeader {
+  @apply text-gray900 font-semibold text-lg mb-2;
+}
+
+.smallModalButton {
+  @apply bg-primary600 shadow-md rounded-md w-full text-white font-semibold py-2 mt-8 block text-center;
+}
+
+.globalInputRingGreen {
+  @apply focus:ring-4 focus:outline-none focus:ring-green100 focus:border-primaryGreen globalTransition;
+}
+
+.showMoreContentShadow {
+  @apply absolute  lg:hidden bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-gray-200 to-transparent pointer-events-none z-10;
+}
+
+.pagination {
+  @apply flex justify-center gap-4 mt-4;
+}
+
+.active {
+  @apply text-primaryGreen font-bold;
+}
+
+.searchEntityContainer {
+  @apply md:w-[50%] my-2 pl-1;
+}
