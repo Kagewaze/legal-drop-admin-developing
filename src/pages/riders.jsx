@@ -9,12 +9,14 @@ export const Riders = () => {
   const [riders, setRiders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
+  const [verificationFilter, setVerificationFilter] = useState("all");
   const { setGlobalLoading, setSearchTerm } = useGlobalContext();
   const navigate = useNavigate();
 
   async function fetchRiders(page = 1, limit = 10) {
     setGlobalLoading(true);
-    const url = `admin/riders?page=${page}&limit=${limit}`;
+    const activated = verificationFilter === "verified" ? "&activated=true" : verificationFilter === "not_verified" ? "&activated=false" : "";
+    const url = `admin/riders?page=${page}&limit=${limit}${activated}`;
     try {
       const {
         data: { data, meta },
@@ -34,7 +36,7 @@ export const Riders = () => {
 
   useEffect(() => {
     fetchRiders(currentPage);
-  }, [currentPage]);
+  }, [currentPage, verificationFilter]);
 
   // Handle page click
   const handlePageClick = (event) => {
@@ -44,7 +46,7 @@ export const Riders = () => {
 
   return (
     <section className="px-4 pt-5">
-      <h1>All Riders</h1>
+      <h1>Drivers</h1>
       <div className=" flex flex-col md:flex-row gap-2 md:justify-between items-start md:items-center">
         <div className="searchEntityContainer flex gap-4  items-center">
           {/* search rider */}
@@ -67,6 +69,17 @@ export const Riders = () => {
             Clear search
           </button>
         </div>
+        <div className="flex gap-2" aria-label="Driver verification filter">
+          {[["all", "All"], ["verified", "Verified"], ["not_verified", "Not Verified"]].map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => { setCurrentPage(1); setVerificationFilter(value); }}
+              className={`border shadow-sm px-3 py-1 rounded-md text-xs ${verificationFilter === value ? "bg-blue-100" : ""}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="overflow-auto">
         <table className="w-full border-collapse border text-center text-xs md:text-sm border-gray200 text-gray600 mt-3">
@@ -78,6 +91,7 @@ export const Riders = () => {
               <th className="border border-gray200 p-3">Email</th>
               <th className="border border-gray200 p-3">Role</th>
               <th className="border border-gray200 p-3">Status</th>
+              <th className="border border-gray200 p-3">Verification</th>
               <th className="border border-gray200 p-3">Actions</th>
             </tr>
           </thead>
@@ -100,6 +114,7 @@ export const Riders = () => {
                   role,
                   id,
                   status,
+                  driver,
                 }) => (
                   <tr
                     key={id}
@@ -111,12 +126,13 @@ export const Riders = () => {
                     <td className="border border-gray200 p-3">{email}</td>
                     <td className="border border-gray200 p-3">{role}</td>
                     <td className="border border-gray200 p-3">{status}</td>
+                    <td className="border border-gray200 p-3">{driver?.activated ? "Verified" : "Not Verified"}</td>
                     <td className="border border-gray200 p-3 flex items-center justify-center">
                       <button
                         onClick={() => navigate(id)}
                         className="px-3 py-1 mr-2 border p-1 rounded-md hover:bg-blue-100 globalTransition text-xs"
                       >
-                        View Rider
+                        View Driver
                       </button>
                     </td>
                   </tr>

@@ -43,7 +43,7 @@ export const NavBar = () => {
     },
     {
       id: 4,
-      linkName: "Riders",
+      linkName: "Drivers",
       linkUrl: "/riders",
       icon: <PiMotorcycle size={16} />,
     },

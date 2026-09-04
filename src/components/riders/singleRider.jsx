@@ -112,6 +112,17 @@ export const SingleRider = () => {
     }
   }
 
+  async function setDriverVerification(approved) {
+    setGlobalLoading(true);
+    try {
+      await customFetch.patch(`admin/drivers/${id}/approve`, { approved });
+      await fetchSingleRider();
+    } catch (error) {
+      setGlobalLoading(false);
+      console.error("Error updating driver verification:", error);
+    }
+  }
+
   function handleClickImage(imgData) {
     setShowImage(true);
     setShowImageData(imgData);
@@ -145,7 +156,7 @@ export const SingleRider = () => {
           />
         )}
         <div className="flex justify-between items-center">
-          <h1 className="font-semibold text-lg mb-4">User Details</h1>
+          <h1 className="font-semibold text-lg mb-4">Driver Details</h1>
           <div className="flex flex-col md:flex-row gap-3 mb-4">
             <button
               onClick={() => setShowRiderUpdate(true)}
@@ -158,6 +169,12 @@ export const SingleRider = () => {
               className="border shadow-sm p-1 rounded-md hover:bg-blue-100 globalTransition text-xs"
             >
               Edit
+            </button>
+            <button
+              onClick={() => setDriverVerification(!activated)}
+              className="border shadow-sm p-1 rounded-md hover:bg-blue-100 globalTransition text-xs"
+            >
+              {activated ? "DEACTIVATE DRIVER" : "VERIFY DRIVER"}
             </button>
           </div>
         </div>
@@ -218,7 +235,7 @@ export const SingleRider = () => {
               <strong>Acceptance Rate:</strong> {acceptanceRate || "-"}
             </p>
             <p>
-              <strong>Activated:</strong> {activated ? "True" : "False"}
+              <strong>Verification:</strong> {activated ? "Verified" : "Not Verified"}
             </p>
             <p>
               <strong>License Image:</strong>{" "}
