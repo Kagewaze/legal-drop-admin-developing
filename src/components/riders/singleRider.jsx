@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { EditModal } from "../editFormModal";
 import { Orders } from "../../pages/orders";
 import { ImageModal } from "../imageModal";
+import { QualificationsPanel } from "./qualificationsPanel";
 import {
   REVIEW_BADGE_CLASSES,
   REJECTION_REASON_MAX_LENGTH,
@@ -295,46 +296,13 @@ export const SingleRider = () => {
                 </p>
               </div>
 
-              <div className="md:col-span-2 space-y-2">
-                <h3 className="font-semibold">Certifications</h3>
-                {review.certifications.length === 0 ? (
-                  <p>None submitted.</p>
-                ) : (
-                  <div className="overflow-auto">
-                    <table className="w-full border-collapse border text-xs md:text-sm">
-                      <thead className="bg-gray50">
-                        <tr>
-                          <th className="border p-2">Type</th>
-                          <th className="border p-2">Status</th>
-                          <th className="border p-2">Expires</th>
-                          <th className="border p-2">Document</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {review.certifications.map((cert) => (
-                          <tr key={cert.id} className="bg-white">
-                            <td className="border p-2 uppercase">{cert.certType}</td>
-                            <td className="border p-2">{cert.status}</td>
-                            <td className="border p-2">{cert.expiresAt ? formatDate(cert.expiresAt) : "Never"}</td>
-                            <td className="border p-2">
-                              {cert.documentUrl ? (
-                                <button
-                                  onClick={() => handleClickImage([cert.documentUrl])}
-                                  className="text-primaryGreen font-semibold"
-                                >
-                                  view
-                                </button>
-                              ) : (
-                                "-"
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+              <QualificationsPanel
+                driverUserId={singleRiderId}
+                qualifications={review.qualifications || []}
+                certifications={review.certifications || []}
+                onViewDocument={(url) => handleClickImage([url])}
+                onChanged={fetchReview}
+              />
 
               <div className="md:col-span-2 border-t pt-4 space-y-3">
                 <div className="flex flex-wrap gap-3">
