@@ -300,6 +300,7 @@ export const SingleRider = () => {
                 driverUserId={singleRiderId}
                 qualifications={review.qualifications || []}
                 certifications={review.certifications || []}
+                vehicle={review.vehicle}
                 onViewDocument={(url) => handleClickImage([url])}
                 onChanged={fetchReview}
               />

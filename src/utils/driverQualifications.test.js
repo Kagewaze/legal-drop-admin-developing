@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   QUALIFICATION_STATUS_LABELS,
@@ -86,5 +89,34 @@ test("decision bodies carry the staleness guard; approve never sends a reason, r
   assert.deepEqual(qualificationGrantBody("u1", "legal_process_service", ""), {
     driverUserId: "u1",
     certType: "legal_process_service",
+  });
+});
+
+// Tow work needs the qualification AND a tow-capable registered vehicle, verified separately. The
+// reviewing admin must be able to see both without the panel implying one verifies the other.
+test("the tow card shows the registered vehicle and keeps vehicle verification separate", () => {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const panel = fs.readFileSync(
+    path.join(here, "..", "components", "riders", "qualificationsPanel.jsx"),
+    "utf8"
+  );
+  const singleRider = fs.readFileSync(
+    path.join(here, "..", "components", "riders", "singleRider.jsx"),
+    "utf8"
+  );
+
+  // The vehicle is shown on the tow family only, from the server's review projection.
+  assert.match(panel, /summary\.type === "tow_operator"/);
+  assert.match(panel, /Registered vehicle/);
+  assert.match(panel, /vehicle\?\.type/);
+  assert.match(singleRider, /vehicle=\{review\.vehicle\}/);
+
+  // It must read as a separate check, never as something approving the qualification verifies.
+  assert.match(panel, /verified separately/i);
+
+  // Approving a qualification still sends only the qualification decision — no vehicle field.
+  assert.deepEqual(qualificationDecisionBody({ id: "c3", status: "pending" }, true, {}), {
+    approved: true,
+    expectedStatus: "pending",
   });
 });

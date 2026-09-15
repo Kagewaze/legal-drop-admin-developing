@@ -35,6 +35,7 @@ export const QualificationsPanel = ({
   driverUserId,
   qualifications,
   certifications,
+  vehicle,
   onViewDocument,
   onChanged,
 }) => {
@@ -167,6 +168,20 @@ export const QualificationsPanel = ({
             {summary.status === "rejected" && summary.rejectionReason && (
               <p className="text-sm mt-1">
                 <strong>Reason:</strong> {summary.rejectionReason}
+              </p>
+            )}
+
+            {/* Tow work needs BOTH this qualification and a tow-capable registered vehicle, and the
+                two are verified separately: approving Tow Operator says nothing about the vehicle.
+                Shown here so an admin is not left guessing why a qualified driver still cannot take
+                tow jobs — the registered vehicle is the other half. */}
+            {summary.type === "tow_operator" && (
+              <p className="text-sm mt-1">
+                <strong>Registered vehicle:</strong> {vehicle?.type || "Not set"}{" "}
+                <span className="text-xs text-gray-600">
+                  — verified separately from this qualification; a tow job also requires the vehicle
+                  the job asks for.
+                </span>
               </p>
             )}
 
