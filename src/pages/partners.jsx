@@ -5,6 +5,7 @@ import { toast } from 'react-toastify'
 export function Partners() {
   const [partners, setPartners] = useState([])
   const [detail, setDetail] = useState(null)
+  const [referralOrders, setReferralOrders] = useState([])
   const [reason, setReason] = useState('')
   const [slug, setSlug] = useState('')
   const [busy, setBusy] = useState(false)
@@ -17,10 +18,15 @@ export function Partners() {
   async function open(id) {
     setError('')
     setDetail(null)
+    setReferralOrders([])
     setReason('')
     try {
-      const r = await customFetch('/admin/partners/' + id)
+      const [r, orders] = await Promise.all([
+        customFetch('/admin/partners/' + id),
+        customFetch('/admin/partners/' + id + '/referral-orders?limit=20'),
+      ])
       setDetail(r.data.data)
+      setReferralOrders(orders.data.data.items)
       setSlug(r.data.data.link?.slug ?? '')
     } catch {
       setError('Could not load partner')
@@ -158,6 +164,11 @@ export function Partners() {
               </button>
             </label>
           ) : null}
+          <h3>Referral performance</h3>
+          <p>Attributed: {detail.metrics.attributedOrdersCreated} · Paid: {detail.metrics.paidAttributedOrders} · Completed: {detail.metrics.completedAttributedOrders} · Cancelled/refunded: {detail.metrics.cancelledAttributedOrders}</p>
+          <p>Total attributed value: {(detail.metrics.totalAttributedOrderValueMinor / 100).toLocaleString('en-CA', { style: 'currency', currency: detail.metrics.currency })}</p>
+          <h3>Referral orders</h3>
+          {referralOrders.length ? <table><thead><tr><th>Reference</th><th>Attributed</th><th>Status</th><th>Payment</th><th>Value</th><th>Provenance</th></tr></thead><tbody>{referralOrders.map((o) => <tr key={o.reference}><td>{o.reference}</td><td>{o.attributedAt}</td><td>{o.orderStatus}</td><td>{o.paymentStatus}</td><td>{(o.orderValue.amountMinor / 100).toLocaleString('en-CA', { style: 'currency', currency: o.orderValue.currency })}</td><td>slug {o.publicSlugSnapshot} · session {o.referralSessionId} · policy {o.policyVersion}</td></tr>)}</tbody></table> : <p>No attributed orders.</p>}
           <h3>Action history</h3>
           <ul>
             {detail.history.map((h) => (

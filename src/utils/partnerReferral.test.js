@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { actionsFor, referralAction } from './partnerReferral.js'
 import { settlementStatusLabel } from './payoutStatus.js'
@@ -24,3 +25,5 @@ test('rejects invalid state, blank reason and malformed slug before posting', ()
 })
 
 test('completed settlement never claims bank receipt',()=>assert.equal(settlementStatusLabel('completed'),'Transfer completed / manual settlement'))
+
+test('admin partner detail uses dedicated attributed order projection',()=>{const page=readFileSync(new URL('../pages/partners.jsx',import.meta.url),'utf8');assert.match(page,/\/referral-orders\?limit=20/);assert.match(page,/publicSlugSnapshot/);assert.match(page,/policyVersion/);assert.doesNotMatch(page,/pickupOtp|trackingToken|receiverAddress/)})
