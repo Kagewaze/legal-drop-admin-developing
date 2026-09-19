@@ -17,6 +17,7 @@ export const NavBar = () => {
   const location = useLocation();
 
   const linksData = [
+    { id: 7, linkName: "Partners", linkUrl: "/partners", icon: <TbUsers size={16} /> },
     {
       id: 0,
       linkName: "Dashboard",

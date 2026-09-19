@@ -33,15 +33,6 @@ export const PayoutDetails = ({ id, closeModal }) => {
 
   const { driver, status, amount, createdAt, orders = [] } = payout;
 
-  const payoutInfo = driver?.driver?.payoutInfo || {};
-  const {
-    bankAccountNumber,
-    transitNumber,
-    financialInstitutionNumber,
-    bankName,
-    bankAddress,
-  } = payoutInfo;
-
   const getStatusClass = (value) => {
     if (value === "pending") return "bg-yellow-200 text-yellow-700";
     if (value === "processing") return "bg-blue-200 text-blue-700";
@@ -74,7 +65,7 @@ export const PayoutDetails = ({ id, closeModal }) => {
             <p>
               <strong>Status:</strong>
               <span className={`ml-2 px-2 py-1 rounded ${getStatusClass(status)}`}>
-                {status}
+                {status === "completed" ? "Transfer completed / manual settlement" : status}
               </span>
             </p>
             <p>
@@ -86,29 +77,7 @@ export const PayoutDetails = ({ id, closeModal }) => {
           </div>
         </div>
 
-        {driver?.driver?.payoutInfo && (
-          <div className="mb-6 shadow-md p-4 rounded-md border bg-gray50 text-sm md:text-base">
-            <h2 className="text-lg font-semibold mb-2 text-gray800">Bank Information</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <p>
-                <strong>Bank Name:</strong> {bankName || "-"}
-              </p>
-              <p>
-                <strong>Account Number:</strong> {bankAccountNumber || "-"}
-              </p>
-              <p>
-                <strong>Transit Number:</strong> {transitNumber || "-"}
-              </p>
-              <p>
-                <strong>Institution Number:</strong> {financialInstitutionNumber || "-"}
-              </p>
-              <p className="md:col-span-2">
-                <strong>Bank Address:</strong> {bankAddress || "-"}
-              </p>
-            </div>
-          </div>
-        )}
-
+        <p className="mb-4">These records track transfers or manual settlement, not confirmed bank receipt. Raw bank details are not displayed here.</p>
         <div className="overflow-auto max-h-[300px]">
           <h2 className="text-lg font-semibold mb-2 text-gray800">Orders</h2>
           <table className="w-full border-collapse text-xs text-gray600 border border-gray200">

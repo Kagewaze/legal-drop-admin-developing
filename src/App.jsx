@@ -10,6 +10,7 @@ import { UnauthorizedPage } from "./pages/unauthorized";
 import { SingleOrder } from "./components/orders/singleOrder";
 import { SingleUser } from "./components/users/singleUser";
 import { SingleRider } from "./components/riders/singleRider";
+import { Partners } from './pages/partners';
 import { Payouts } from "./pages/payouts";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -39,6 +40,7 @@ function App() {
             <Route path="riders" element={<Riders />} />
             <Route path="riders/:singleRiderId" element={<SingleRider />} />
             <Route path="payouts" element={<Payouts />} />
+            <Route path="partners" element={<Partners />} />
             <Route path="unauthorized-page" element={<UnauthorizedPage />} />
             <Route path="create-order" element={<CreateOrder />} />
             <Route path="contacts" element={<Contacts />} />

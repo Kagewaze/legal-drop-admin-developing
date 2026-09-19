@@ -1,3 +1,4 @@
+import { settlementStatusLabel } from '../utils/payoutStatus';
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 import { usePayoutsContext } from "../utils/payoutsContext";
@@ -74,7 +75,7 @@ export const Payouts = () => {
               <option value="">All</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
+              <option value="completed">Transfer completed / manual settlement</option>
               <option value="failed">Failed</option>
             </select>
           </div>
@@ -112,7 +113,7 @@ export const Payouts = () => {
                   </td>
                   <td className="border border-gray200 p-3">{driver?.email}</td>
                   <td className="border border-gray200 p-3">
-                    <span className={`px-2 py-1 rounded ${statusClass(status)}`}>{status}</span>
+                    <span className={`px-2 py-1 rounded ${statusClass(status)}`}>{settlementStatusLabel(status)}</span>
                   </td>
                   <td className="border border-gray200 p-3">${amount}</td>
                   <td className="border border-gray200 p-3">

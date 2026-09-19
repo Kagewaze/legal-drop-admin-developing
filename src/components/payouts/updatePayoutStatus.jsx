@@ -53,7 +53,7 @@ export const UpdatePayoutStatus = ({ id, closeModal, refresh }) => {
               </option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
+              <option value="completed">Transfer completed / manual settlement</option>
               <option value="failed">Failed</option>
             </select>
             <div className="border-t border-gray200 mt-4">
