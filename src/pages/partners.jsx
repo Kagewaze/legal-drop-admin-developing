@@ -8,6 +8,13 @@ export function Partners() {
   const [referralOrders, setReferralOrders] = useState([])
   const [earnings, setEarnings] = useState({ balances: [], entries: [], pendingAssessments: [] })
   const [reconciliation, setReconciliation] = useState([])
+  const [analytics, setAnalytics] = useState([])
+  const [detailAnalytics, setDetailAnalytics] = useState(null)
+  const [period, setPeriod] = useState('THIS_MONTH')
+  const [search, setSearch] = useState('')
+  const [programFilter, setProgramFilter] = useState('ALL')
+  const [tierFilter, setTierFilter] = useState('ALL')
+  const [activityFilter, setActivityFilter] = useState('ALL')
   const [reason, setReason] = useState('')
   const [slug, setSlug] = useState('')
   const [busy, setBusy] = useState(false)
@@ -16,28 +23,33 @@ export function Partners() {
     Promise.all([
       customFetch('/admin/partners'),
       customFetch('/admin/partners/commission-reconciliation'),
+      customFetch('/admin/partners/analytics/portfolio?period=' + period),
     ])
-      .then(([partnersResponse, reconciliationResponse]) => {
+      .then(([partnersResponse, reconciliationResponse, analyticsResponse]) => {
         setPartners(partnersResponse.data.data)
         setReconciliation(reconciliationResponse.data.data)
+        setAnalytics(analyticsResponse.data.data)
       })
       .catch(() => setError('Could not load partner financial portfolio'))
-  }, [])
+  }, [period])
   async function open(id) {
     setError('')
     setDetail(null)
     setReferralOrders([])
     setEarnings({ balances: [], entries: [], pendingAssessments: [] })
+    setDetailAnalytics(null)
     setReason('')
     try {
-      const [r, orders, finance] = await Promise.all([
+      const [r, orders, finance, performance] = await Promise.all([
         customFetch('/admin/partners/' + id),
         customFetch('/admin/partners/' + id + '/referral-orders?limit=20'),
         customFetch('/admin/partners/' + id + '/earnings'),
+        customFetch('/admin/partners/' + id + '/analytics?period=' + period),
       ])
       setDetail(r.data.data)
       setReferralOrders(orders.data.data.items)
       setEarnings(finance.data.data)
+      setDetailAnalytics(performance.data.data)
       setSlug(r.data.data.link?.slug ?? '')
     } catch {
       setError('Could not load partner')
@@ -75,6 +87,7 @@ export function Partners() {
       <h1 className="text-xl font-semibold">Partner referral programs</h1>
       {error ? <p role="alert">{error}</p> : null}
       <p>Showing up to 100 most recently created businesses.</p>
+      <div><label>Search <input value={search} onChange={e => setSearch(e.target.value)} /></label><label> Program <select value={programFilter} onChange={e=>setProgramFilter(e.target.value)}><option>ALL</option><option>ACTIVE</option><option>PENDING</option><option>DISABLED</option></select></label><label> Tier <select value={tierFilter} onChange={e=>setTierFilter(e.target.value)}><option>ALL</option><option value="300">3%</option><option value="400">4%</option><option value="500">5%</option></select></label><label> Activity <select value={activityFilter} onChange={e=>setActivityFilter(e.target.value)}><option>ALL</option><option>NEW_NO_ACTIVITY</option><option>INACTIVE</option><option>RE_ENGAGEMENT</option><option>HIGH_GROWTH</option><option>DECLINING</option><option>LOW_CONVERSION</option><option>HIGH_CANCELLATION</option><option>HIGH_REFUND</option><option>TIER_APPROACHING</option><option>HIGH_VALUE</option></select></label><label> Period <select value={period} onChange={e=>setPeriod(e.target.value)}><option>THIS_MONTH</option><option>PREVIOUS_MONTH</option><option>TRAILING_30_DAYS</option><option>TRAILING_90_DAYS</option></select></label></div>
       <table>
         <thead>
           <tr>
@@ -90,11 +103,11 @@ export function Partners() {
             <th>Net liability</th>
             <th>Average basis</th>
             <th>Average order</th>
-            <th>Days since earning</th>
+            <th>Days since earning</th><th>Sessions</th><th>Conversion</th><th>Current tier</th><th>Last referral</th><th>Last completion</th><th>Signals</th>
           </tr>
         </thead>
         <tbody>
-          {partners.map((p) => (
+          {partners.filter(p => (!search || p.companyName.toLowerCase().includes(search.toLowerCase())) && (programFilter === 'ALL' || p.referralProgramStatus === programFilter) && (tierFilter === 'ALL' || String(analytics.find(a=>a.businessId===p.id)?.metrics?.earnings?.currentTierBasisPoints) === tierFilter) && (activityFilter === 'ALL' || analytics.find(a=>a.businessId===p.id)?.signals?.includes(activityFilter))).map((p) => (
             <tr key={p.id}>
               <td>
                 <button onClick={() => open(p.id)}>{p.companyName}</button>
@@ -110,7 +123,7 @@ export function Partners() {
               <td>{((p.financial?.netCommissionLiabilityMinor ?? 0) / 100).toFixed(2)}</td>
               <td>{((p.financial?.averageEligibleBasisMinor ?? 0) / 100).toFixed(2)}</td>
               <td>{((p.financial?.averageOrderValueMinor ?? 0) / 100).toFixed(2)}</td>
-              <td>{p.financial?.daysSinceLastEarnedCommission ?? 'Never'}</td>
+              <td>{p.financial?.daysSinceLastEarnedCommission ?? 'Never'}</td><td>{analytics.find(a=>a.businessId===p.id)?.metrics?.acquisition?.sessions ?? 'N/A'}</td><td>{analytics.find(a=>a.businessId===p.id)?.metrics?.conversion?.sessionToCompletedBasisPoints == null ? 'N/A' : analytics.find(a=>a.businessId===p.id).metrics.conversion.sessionToCompletedBasisPoints / 100 + '%'}</td><td>{analytics.find(a=>a.businessId===p.id)?.metrics?.earnings?.currentTierBasisPoints ? analytics.find(a=>a.businessId===p.id).metrics.earnings.currentTierBasisPoints / 100 + '%' : 'N/A'}</td><td>{analytics.find(a=>a.businessId===p.id)?.metrics?.activity?.lastReferralSession || 'No data'}</td><td>{analytics.find(a=>a.businessId===p.id)?.metrics?.activity?.lastCompletedOrder || 'No data'}</td><td>{analytics.find(a=>a.businessId===p.id)?.signals?.join(', ') || 'None'}</td>
             </tr>
           ))}
         </tbody>
@@ -204,6 +217,8 @@ export function Partners() {
           <h3>Referral performance</h3>
           <p>Attributed: {detail.metrics.attributedOrdersCreated} · Paid: {detail.metrics.paidAttributedOrders} · Completed: {detail.metrics.completedAttributedOrders} · Cancelled/refunded: {detail.metrics.cancelledAttributedOrders}</p>
           <p>Total attributed value: {(detail.metrics.totalAttributedOrderValueMinor / 100).toLocaleString('en-CA', { style: 'currency', currency: detail.metrics.currency })}</p>
+          <h3>Referral funnel and performance</h3>
+          {detailAnalytics ? <><p>Visits {detailAnalytics.acquisition.visits} � Sessions {detailAnalytics.acquisition.sessions} � Checkouts {detailAnalytics.acquisition.checkouts} � Orders {detailAnalytics.acquisition.orders} � Paid {detailAnalytics.acquisition.paid} � Completed {detailAnalytics.acquisition.completed}</p><p>Conversion {detailAnalytics.conversion.sessionToCompletedBasisPoints == null ? 'N/A' : detailAnalytics.conversion.sessionToCompletedBasisPoints / 100 + '%'} � Completion {detailAnalytics.quality.completionBasisPoints == null ? 'N/A' : detailAnalytics.quality.completionBasisPoints / 100 + '%'} � Cancellation {detailAnalytics.quality.cancellationBasisPoints == null ? 'N/A' : detailAnalytics.quality.cancellationBasisPoints / 100 + '%'} � Refund {detailAnalytics.quality.refundBasisPoints == null ? 'N/A' : detailAnalytics.quality.refundBasisPoints / 100 + '%'}</p><p>Current tier {detailAnalytics.earnings.currentTierBasisPoints / 100}% � Monthly completions {detailAnalytics.earnings.qualifyingMonthlyCompletions} � Last session {detailAnalytics.activity.lastReferralSession || 'No data'} � Last completion {detailAnalytics.activity.lastCompletedOrder || 'No data'}</p></> : <p>No analytics coverage yet.</p>}
           <h3>Financial summary</h3>
           {detail.financial ? <p>
             Eligible basis: {(detail.financial.grossEligibleBasisMinor / 100).toFixed(2)} ? Referral adjustment collected: {(detail.financial.referralAdjustmentRevenueCollectedMinor / 100).toFixed(2)} ? Pending: {(detail.financial.pendingCommissionMinor / 100).toFixed(2)} ? Gross earned: {(detail.financial.grossEarnedCommissionMinor / 100).toFixed(2)} ? Reversals: {(detail.financial.reversalMinor / 100).toFixed(2)} ? Net liability: {(detail.financial.netCommissionLiabilityMinor / 100).toFixed(2)}
