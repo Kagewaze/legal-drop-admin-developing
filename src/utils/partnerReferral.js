@@ -31,3 +31,10 @@ export function referralAction(status, action, reason, slug) {
 }
 
 export function settlementStatusLabel(status) { return status === 'completed' ? 'Transfer completed / manual settlement' : status; }
+export function beneficiaryAbsenceIsExpected(status) {
+  return status === 'NOT_ENROLLED' || status === 'PENDING'
+}
+
+export function shouldLoadBeneficiaryData(detail) {
+  return Boolean(detail?.beneficiary?.exists)
+}

@@ -1,6 +1,6 @@
 import { IoMdMenu } from "react-icons/io";
 import { NavLinks } from "./navLinks";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGlobalContext } from "../utils/context";
 import { NavCTA } from "./navCTA";
 import { useLocation } from "react-router-dom";
@@ -16,7 +16,7 @@ export const NavBar = () => {
   const { activePageId, dispatch } = useGlobalContext();
   const location = useLocation();
 
-  const linksData = [
+  const linksData = useMemo(() => [
     { id: 7, linkName: "Partners", linkUrl: "/partners", icon: <TbUsers size={16} /> },
     {
       id: 0,
@@ -60,7 +60,7 @@ export const NavBar = () => {
       linkUrl: "/payouts",
       icon: <MdOutlinePayment size={16} />,
     },
-  ];
+  ], []);
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -88,7 +88,9 @@ export const NavBar = () => {
         });
       }
     }
-  }, [location.pathname]);
+  }, [dispatch, linksData, location.pathname]);
+
+  const activeLink = linksData.find((link) => link.id === activePageId) ?? linksData[0];
 
   // DONT DELETE
   const showSidebarClassName = "sidebarBTN";
@@ -98,8 +100,8 @@ export const NavBar = () => {
       <div className=" flex items-center justify-between">
         {/* active page */}
         <p className=" flex items-center gap-x-2 text-primary900">
-          <span>{linksData[activePageId].icon}</span>
-          {linksData[activePageId].linkName}
+          <span>{activeLink.icon}</span>
+          {activeLink.linkName}
         </p>
 
         {/* menu button */}

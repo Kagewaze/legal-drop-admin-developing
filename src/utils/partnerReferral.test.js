@@ -1,7 +1,7 @@
 import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
-import { actionsFor, partnerActionPath, referralAction, rowActionsFor } from './partnerReferral.js'
+import { actionsFor, beneficiaryAbsenceIsExpected, partnerActionPath, referralAction, rowActionsFor, shouldLoadBeneficiaryData } from './partnerReferral.js'
 import { settlementStatusLabel } from './payoutStatus.js'
 test('only enrolled pending programs are offered approval', () => {
   assert.deepEqual(actionsFor('NOT_ENROLLED'), [])
@@ -45,7 +45,22 @@ test('admin partner detail uses dedicated attributed order projection',()=>{cons
 
 test('pending enrollment review is visible, confirmed, single-submit guarded and refetched', () => {
   const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
-  for (const value of ['<th>Actions</th>', "open(p.id, 'APPROVE')", 'Business ID:', 'window.confirm', 'if (!detail || busy) return', "customFetch('/admin/partners')", 'setPartners(list.data.data)', 'setError(e.response?.data?.message']) assert.ok(page.includes(value), value)
+  for (const value of ['>Actions</th>', "open(partner.id, 'APPROVE')", 'Business ID:', 'window.confirm', 'if (!detail || busy) return', "customFetch('/admin/partners')", 'setPartners(list.data.data)', 'setError(requestError.response?.data?.message']) assert.ok(page.includes(value), value)
+})
+
+test('partner portfolio uses scan-friendly primary columns and preserves detail analytics', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  for (const value of ['Partner Program', 'Portfolio businesses', 'Program status', 'Completed value', 'Net liability', 'Performance', 'Referral funnel', 'Commission entries', 'Payout readiness']) assert.ok(page.includes(value), value)
+})
+
+test('partner statuses are explicit badges and same-name businesses retain UUID context', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  for (const value of ['statusClass', 'statusLabel', 'shortId(partner.id)', 'title={partner.id}', 'NOT_ENROLLED']) assert.ok(page.includes(value), value)
+})
+
+test('filter controls and polished empty states remain available', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  for (const value of ['Search partners', 'Program status', 'Tier', 'Activity', 'Period', 'No partners match these filters', 'No commission activity yet.']) assert.ok(page.includes(value), value)
 })
 
 test('Admin route remains protected and backend remains the authorization authority', () => {
@@ -64,4 +79,49 @@ test('admin partner detail shows factual payout readiness without raw banking da
   const ui = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
   for (const value of ['payoutSummary', 'readinessState', 'maskedSummary', 'heldMinor', 'availableMinor', 'reservedMinor', 'transferredMinor', 'signals', 'automation', 'timezone', 'automation-preview', 'payoutPreview', 'eligiblePayoutMinor', 'recoveryDueMinor']) assert.match(ui, new RegExp(value))
   assert.doesNotMatch(ui, /accountNumber|routingNumber|providerAccountId|providerExternalAccountId|bankPassword/)
+})
+test('beneficiary absence follows Partner Program lifecycle semantics', () => {
+  for (const status of ['NOT_ENROLLED', 'PENDING']) {
+    assert.equal(beneficiaryAbsenceIsExpected(status), true)
+    assert.equal(shouldLoadBeneficiaryData({ status, beneficiary: { exists: false } }), false)
+  }
+  for (const status of ['ACTIVE', 'DISABLED']) {
+    assert.equal(beneficiaryAbsenceIsExpected(status), false)
+    assert.equal(shouldLoadBeneficiaryData({ status, beneficiary: { exists: false } }), false)
+  }
+  assert.equal(shouldLoadBeneficiaryData({ status: 'ACTIVE', beneficiary: { exists: true } }), true)
+})
+
+test('expected missing beneficiary renders a neutral detail state without dependent requests', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  assert.match(page, /Not created yet/)
+  assert.match(page, /Referral infrastructure will be created when the Partner Program is approved/)
+  assert.match(page, /if \(!shouldLoadBeneficiaryData\(partnerDetail\)\)/)
+  assert.match(page, /if \(!beneficiaryAbsenceIsExpected\(partnerDetail\.status\)\)/)
+  assert.match(page, /referral beneficiary is missing\. Financial and referral data cannot be loaded/)
+  assert.ok(page.indexOf("customFetch('/admin/partners/' + id)") < page.indexOf("customFetch('/admin/partners/' + id + '/earnings')"))
+})
+
+test('portfolio loading remains aggregate and does not issue per-row beneficiary requests', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  const portfolioLoader = page.slice(page.indexOf('useEffect(() =>'), page.indexOf('const analyticsByBusiness'))
+  assert.match(portfolioLoader, /customFetch\('\/admin\/partners'\)/)
+  assert.match(portfolioLoader, /commission-reconciliation/)
+  assert.match(portfolioLoader, /analytics\/portfolio/)
+  assert.doesNotMatch(portfolioLoader, /referral-orders|\/earnings|\/payouts|beneficiary/)
+})
+test('shared Admin header resolves the selected route by link id', () => {
+  const nav = readFileSync(new URL('../components/navBar.jsx', import.meta.url), 'utf8')
+  assert.match(nav, /\{ id: 7, linkName: "Partners", linkUrl: "\/partners"/)
+  assert.match(nav, /const activeLink = linksData\.find\(\(link\) => link\.id === activePageId\)/)
+  assert.match(nav, /\{activeLink\.linkName\}/)
+  assert.doesNotMatch(nav, /linksData\[activePageId\]\.linkName/)
+  assert.match(nav, /linkName: "Payouts"/)
+})
+
+test('portfolio count uses accurate business semantics without changing its source', () => {
+  const page = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  assert.match(page, /metric\('Portfolio businesses', summary\.total, 'Businesses in the current portfolio'\)/)
+  assert.match(page, /total: partners\.length/)
+  assert.doesNotMatch(page, /metric\('Total partners'/)
 })
