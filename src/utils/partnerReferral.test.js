@@ -34,3 +34,9 @@ test('admin portfolio consumes shared analytics with factual filters and no opaq
   for (const value of ['analytics/portfolio', 'sessionToCompletedBasisPoints', 'completionBasisPoints', 'cancellationBasisPoints', 'refundBasisPoints', 'tierFilter', 'programFilter', 'activityFilter', 'signals']) assert.match(ui, new RegExp(value))
   assert.doesNotMatch(ui, /partnerScore|customerEmail|pickupAddress|dropoffAddress/)
 })
+
+test('admin partner detail shows factual payout readiness without raw banking data', () => {
+  const ui = readFileSync(new URL('../pages/partners.jsx', import.meta.url), 'utf8')
+  for (const value of ['payoutSummary', 'readinessState', 'maskedSummary', 'heldMinor', 'availableMinor', 'reservedMinor', 'transferredMinor']) assert.match(ui, new RegExp(value))
+  assert.doesNotMatch(ui, /accountNumber|routingNumber|providerAccountId|providerExternalAccountId|bankPassword/)
+})

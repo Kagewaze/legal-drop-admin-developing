@@ -10,6 +10,7 @@ export function Partners() {
   const [reconciliation, setReconciliation] = useState([])
   const [analytics, setAnalytics] = useState([])
   const [detailAnalytics, setDetailAnalytics] = useState(null)
+  const [payoutSummary, setPayoutSummary] = useState(null)
   const [period, setPeriod] = useState('THIS_MONTH')
   const [search, setSearch] = useState('')
   const [programFilter, setProgramFilter] = useState('ALL')
@@ -40,16 +41,18 @@ export function Partners() {
     setDetailAnalytics(null)
     setReason('')
     try {
-      const [r, orders, finance, performance] = await Promise.all([
+      const [r, orders, finance, performance, payout] = await Promise.all([
         customFetch('/admin/partners/' + id),
         customFetch('/admin/partners/' + id + '/referral-orders?limit=20'),
         customFetch('/admin/partners/' + id + '/earnings'),
         customFetch('/admin/partners/' + id + '/analytics?period=' + period),
+        customFetch('/admin/partners/' + id + '/payouts'),
       ])
       setDetail(r.data.data)
       setReferralOrders(orders.data.data.items)
       setEarnings(finance.data.data)
       setDetailAnalytics(performance.data.data)
+      setPayoutSummary(payout.data.data)
       setSlug(r.data.data.link?.slug ?? '')
     } catch {
       setError('Could not load partner')
@@ -223,6 +226,8 @@ export function Partners() {
           {detail.financial ? <p>
             Eligible basis: {(detail.financial.grossEligibleBasisMinor / 100).toFixed(2)} ? Referral adjustment collected: {(detail.financial.referralAdjustmentRevenueCollectedMinor / 100).toFixed(2)} ? Pending: {(detail.financial.pendingCommissionMinor / 100).toFixed(2)} ? Gross earned: {(detail.financial.grossEarnedCommissionMinor / 100).toFixed(2)} ? Reversals: {(detail.financial.reversalMinor / 100).toFixed(2)} ? Net liability: {(detail.financial.netCommissionLiabilityMinor / 100).toFixed(2)}
           </p> : null}
+          <h3>Payout destination and settlement</h3>
+          {payoutSummary ? <><p>Readiness: {payoutSummary.destination?.readinessState || 'NO_DESTINATION'} · Destination: {payoutSummary.destination?.maskedSummary || 'Not configured'} · Requirements: {payoutSummary.destination?.requirementsDue?.join(', ') || 'None reported'}</p><p>Release policy: {payoutSummary.releasePolicy.activated ? 'ACTIVE' : 'NOT ACTIVATED'}</p>{payoutSummary.balances.map(b=><p key={b.currency}>{b.currency}: held {b.heldMinor} · available {b.availableMinor} · reserved {b.reservedMinor} · transferred {b.transferredMinor}</p>)}</> : <p>No payout configuration.</p>}
           <h3>Commission liability</h3>
           {(earnings.balances ?? []).length ? (
             <ul>{earnings.balances.map((b) => <li key={b.currency}>
