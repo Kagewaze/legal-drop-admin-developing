@@ -4,6 +4,16 @@ export function actionsFor(status) {
     []
   )
 }
+export function rowActionsFor(status) {
+  return status === 'PENDING' ? ['REVIEW', 'APPROVE'] : ['VIEW']
+}
+
+export function partnerActionPath(businessId) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(businessId))
+    throw new Error('A valid Business ID is required')
+  return `/admin/partners/${businessId}/referral-program`
+}
+
 export function referralAction(status, action, reason, slug) {
   if (!actionsFor(status).includes(action))
     throw new Error('Action unavailable for current program status')

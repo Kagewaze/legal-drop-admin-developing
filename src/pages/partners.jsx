@@ -1,4 +1,4 @@
-import { referralAction } from '../utils/partnerReferral'
+import { partnerActionPath, referralAction, rowActionsFor } from '../utils/partnerReferral'
 import { useEffect, useState } from 'react'
 import customFetch from '../utils/customFetch'
 import { toast } from 'react-toastify'
@@ -21,6 +21,7 @@ export function Partners() {
   const [slug, setSlug] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [reviewIntent, setReviewIntent] = useState(null)
   useEffect(() => {
     Promise.all([
       customFetch('/admin/partners'),
@@ -34,13 +35,14 @@ export function Partners() {
       })
       .catch(() => setError('Could not load partner financial portfolio'))
   }, [period])
-  async function open(id) {
+  async function open(id, intent = null) {
     setError('')
     setDetail(null)
     setReferralOrders([])
     setEarnings({ balances: [], entries: [], pendingAssessments: [] })
     setDetailAnalytics(null)
     setReason('')
+    setReviewIntent(intent)
     try {
       const [r, orders, finance, performance, payout, preview] = await Promise.all([
         customFetch('/admin/partners/' + id),
@@ -58,22 +60,27 @@ export function Partners() {
       setPayoutPreview(preview.data.data)
       setSlug(r.data.data.link?.slug ?? '')
     } catch {
+      setReviewIntent(null)
       setError('Could not load partner')
     }
   }
   async function action(action) {
     if (!detail || busy) return
+    const businessId = detail.business.id
+    if (action === 'APPROVE' && !window.confirm(`Approve the Partner Program enrollment for ${detail.business.name} (${businessId})?`)) return
     setBusy(true)
     setError('')
     try {
       const r = await customFetch.post(
-        '/admin/partners/' + detail.business.id + '/referral-program',
+        partnerActionPath(businessId),
         referralAction(detail.status, action, reason, slug)
       )
       setDetail(r.data.data)
       setReason('')
+      setReviewIntent(null)
       const list = await customFetch('/admin/partners')
       setPartners(list.data.data)
+      toast.success(action === 'APPROVE' ? 'Partner Program enrollment approved' : 'Partner Program updated')
     } catch (e) {
       setError(e.response?.data?.message ?? e.message ?? 'Action failed')
     } finally {
@@ -100,6 +107,7 @@ export function Partners() {
             <th>Business</th>
             <th>Program</th>
             <th>Contact</th>
+            <th>Actions</th>
             <th>Attributed</th>
             <th>Completed</th>
             <th>Completed value</th>
@@ -120,6 +128,10 @@ export function Partners() {
               </td>
               <td>{p.referralProgramStatus}</td>
               <td>{p.contactName || 'Not designated'}</td>
+              <td>
+                <button onClick={() => open(p.id)}>{rowActionsFor(p.referralProgramStatus).includes('REVIEW') ? 'Review' : 'View'}</button>
+                {rowActionsFor(p.referralProgramStatus).includes('APPROVE') ? <button onClick={() => open(p.id, 'APPROVE')}>Approve</button> : null}
+              </td>
               <td>{p.metrics?.attributedOrdersCreated ?? 0}</td>
               <td>{p.metrics?.completedAttributedOrders ?? 0}</td>
               <td>{((p.metrics?.completedAttributedOrderValueMinor ?? 0) / 100).toLocaleString('en-CA', { style: 'currency', currency: p.metrics?.currency ?? 'CAD' })}</td>
@@ -142,7 +154,8 @@ export function Partners() {
       </section>
       {detail ? (
         <section className="border p-4 space-y-3">
-          <h2 className="font-semibold">{detail.business.name}</h2>
+          <h2 className="font-semibold">{reviewIntent === 'APPROVE' ? 'Review Partner enrollment: ' : 'Partner: '}{detail.business.name}</h2>
+          <p>Business ID: <code>{detail.business.id}</code></p>
           <p>Program: {detail.status}</p>
           <p>
             Beneficiary: {detail.beneficiary.exists ? detail.beneficiary.status : 'Not allocated'}
@@ -186,7 +199,7 @@ export function Partners() {
           <div className="flex gap-4">
             {detail.status === 'PENDING' ? (
               <button disabled={busy || reason.trim().length < 3} onClick={() => action('APPROVE')}>
-                Approve program
+                {busy ? 'Approving...' : 'Approve program'}
               </button>
             ) : null}
             {detail.status === 'ACTIVE' ? (
