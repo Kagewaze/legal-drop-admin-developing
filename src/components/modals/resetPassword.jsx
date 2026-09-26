@@ -6,6 +6,7 @@ import { baseUrl } from "../../utils/customFetch";
 import axios from "axios";
 import { ApiResponseMsg } from "../apiResponseMsg";
 import { SuccessModal } from "./success";
+import { authOtpErrorMessage } from "../../utils/authOtpErrors";
 
 export const ResetPasswordModal = ({ email }) => {
   const {
@@ -95,24 +96,12 @@ export const ResetPasswordModal = ({ email }) => {
       }
     } catch (error) {
       setResetPasswordLoading(false);
-      console.log(error);
-
-      const { status } = error?.response;
-
-      if (status === 400 || status === 403 || status === 500) {
-        dispatch({
-          type: "SET_ApiResponse_MSG",
-          payload: error.response.data.message,
-        });
-      }
-
-      if (error.message.includes("Network Error")) {
-        dispatch({
-          type: "SET_ApiResponse_MSG",
-          payload:
-            "Network error occured, please check your internet connection",
-        });
-      }
+      // Any error status shows the server's message; no response shows the network message. The
+      // error object is not logged: it carries the request body, including the new password.
+      dispatch({
+        type: "SET_ApiResponse_MSG",
+        payload: authOtpErrorMessage(error),
+      });
     }
   }
 

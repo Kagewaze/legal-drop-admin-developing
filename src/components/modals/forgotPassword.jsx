@@ -6,6 +6,7 @@ import { baseUrl } from "../../utils/customFetch";
 import axios from "axios";
 import { ApiResponseMsg } from "../apiResponseMsg";
 import { ResetPasswordModal } from "./resetPassword";
+import { authOtpErrorMessage } from "../../utils/authOtpErrors";
 
 export const ForgotPasswordModal = () => {
   const {
@@ -54,24 +55,13 @@ export const ForgotPasswordModal = () => {
       }
     } catch (error) {
       setForgotPasswordLoading(false);
-      console.log(error);
-
-      const { status } = error?.response;
-
-      if (status === 400 || status === 500) {
-        dispatch({
-          type: "SET_ApiResponse_MSG",
-          payload: error.response.data.message,
-        });
-      }
-
-      if (error.message.includes("Network Error")) {
-        dispatch({
-          type: "SET_ApiResponse_MSG",
-          payload:
-            "Network error occured, please check your internet connection",
-        });
-      }
+      // Any error status (including 429 rate limit and 503 delivery failure) shows the server's
+      // message; no response shows the network message. The error object is not logged: it
+      // carries the request body.
+      dispatch({
+        type: "SET_ApiResponse_MSG",
+        payload: authOtpErrorMessage(error),
+      });
     }
   }
 
