@@ -1,3 +1,4 @@
+import { PaymentInvalidationReconciliation } from '../components/partners/paymentInvalidationReconciliation'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import customFetch from '../utils/customFetch'
@@ -297,6 +298,8 @@ export function Partners() {
             </div>
           )}
         </section>
+
+        <PaymentInvalidationReconciliation />
 
         <section aria-labelledby="reconciliation-heading" className="rounded-xl border border-gray200 bg-white p-5 shadow-sm">
           <div className="mb-4"><h2 id="reconciliation-heading" className="font-semibold text-gray900">Commission reconciliation</h2><p className="text-xs text-gray500">Ledger consistency by beneficiary, currency and period</p></div>

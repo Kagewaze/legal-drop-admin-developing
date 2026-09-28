@@ -17,6 +17,7 @@ let state
 const noRequest = () => { throw new Error('No API or provider calls permitted') }
 new Function('require', 'module', 'exports', code)(name => {
   if (name === 'react') return { ...React, useEffect: () => {}, useState: () => [state.shift(), noRequest] }
+  if (name === '../components/partners/paymentInvalidationReconciliation') return { PaymentInvalidationReconciliation: () => null }
   if (name === 'react-toastify') return { toast: noRequest }
   if (name === '../utils/customFetch') return noRequest
   if (name === '../utils/partnerReferral') return referral
