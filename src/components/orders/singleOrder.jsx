@@ -6,6 +6,7 @@ import customFetch from "../../utils/customFetch";
 import { useGlobalContext } from "../../utils/context";
 import { getFormattedDateTime } from "../../utils/dateTime";
 import { ImageModal } from "../imageModal";
+import { ProofOfDelivery } from "./proofOfDelivery";
 
 export const SingleOrder = () => {
   const { showAssignOrder, setShowAssignOrder, showImage, setShowImage } =
@@ -404,6 +405,9 @@ export const SingleOrder = () => {
                 </div>
               )}
             </div>
+
+            {/* Wave 2B.4 — operational proof of delivery (admin-guarded on the server). */}
+            <ProofOfDelivery orderId={id} />
           </>
         ) : (
           <p>Loading order details...</p>
