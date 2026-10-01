@@ -1,7 +1,9 @@
 import { useParams } from "react-router-dom";
 import { useOrdersContext } from "../../utils/ordersContext";
 import { AssignOrder } from "./assignOrder";
+import { AssignOrderButton } from "./assignOrderButton";
 import { OrderCancellation } from "./orderCancellation";
+import { canAssignOrder } from "../../utils/orderAssignment";
 import { useEffect, useState } from "react";
 import customFetch from "../../utils/customFetch";
 import { useGlobalContext } from "../../utils/context";
@@ -121,7 +123,8 @@ export const SingleOrder = () => {
 
   return (
     <>
-      {showAssignOrder && <AssignOrder orderId={id} />}
+      {/* The assign flag is shared app state; only an assignable order may show the modal. */}
+      {showAssignOrder && canAssignOrder(order) && <AssignOrder orderId={id} />}
       {showImage && (
         <ImageModal data={imageData} closeImgModal={setShowImage} />
       )}
@@ -130,12 +133,9 @@ export const SingleOrder = () => {
           <>
             <h1 className=" font-bold text-gray900 mb-4 flex justify-between">
               <span className=" text-lg md:text-2xl">Order Details</span>
-              <button
-                onClick={() => setShowAssignOrder(true)}
-                className=" border shadow-sm p-1 rounded-md hover:bg-blue-100 globalTransition text-xs md:text-sm"
-              >
-                Assign Order
-              </button>
+              {/* Hidden unless the order is assignable (pending, no driver, not accepted, not picked
+                  up or completed, no cancellation); the backend still decides. */}
+              <AssignOrderButton order={order} onAssign={() => setShowAssignOrder(true)} />
             </h1>
 
             {/* Cancel Order (eligible orders) and the current cancellation state */}
