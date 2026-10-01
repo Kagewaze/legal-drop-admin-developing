@@ -153,7 +153,14 @@ test("the confirmation names tracking code, payment status, order type and the r
   assert.equal(paid.trackingCode, "TRK-FIXTURE");
   assert.equal(paid.payment, "Paid · Card");
   assert.equal(paid.service, "Delivery · Standard");
-  assert.match(paid.warning, /refund/i);
+  // Before the backend answers, the paid text may only describe an attempt — never promise a refund.
+  assert.equal(
+    paid.warning,
+    "Druppr will attempt to refund this paid order through its original payment method. If it cannot be refunded automatically, the order will not be finalized as cancelled and will require manual review."
+  );
+  for (const promise of [/is refunded/i, /guaranteed/i, /definitely/i, /refund completed/i]) {
+    assert.doesNotMatch(paid.warning, promise);
+  }
   const unpaid = orderCancellationSummary(order({ paid: false, paymentMethod: "customer_link", orderCategory: "marketplace_delivery", pricingMode: "dropbatch" }));
   assert.equal(unpaid.payment, "Unpaid · Customer payment link");
   assert.equal(unpaid.service, "Marketplace delivery · DropBatch");

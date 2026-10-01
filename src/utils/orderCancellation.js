@@ -53,7 +53,7 @@ export function orderCancellationSummary(order) {
     payment: [paid ? "Paid" : "Unpaid", method].filter(Boolean).join(" · "),
     service: [category, mode].filter(Boolean).join(" · "),
     warning: paid
-      ? "This order is paid. If the backend accepts the cancellation, the customer is refunded in full to the original payment method. If it cannot refund automatically, nothing is cancelled."
+      ? "Druppr will attempt to refund this paid order through its original payment method. If it cannot be refunded automatically, the order will not be finalized as cancelled and will require manual review."
       : "This order is unpaid. If the backend accepts the cancellation, it is cancelled with no refund.",
   };
 }
