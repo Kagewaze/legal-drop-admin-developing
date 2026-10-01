@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useOrdersContext } from "../../utils/ordersContext";
 import { AssignOrder } from "./assignOrder";
+import { OrderCancellation } from "./orderCancellation";
 import { useEffect, useState } from "react";
 import customFetch from "../../utils/customFetch";
 import { useGlobalContext } from "../../utils/context";
@@ -136,6 +137,9 @@ export const SingleOrder = () => {
                 Assign Order
               </button>
             </h1>
+
+            {/* Cancel Order (eligible orders) and the current cancellation state */}
+            <OrderCancellation order={order} onOrderChanged={fetchSingleOrder} />
 
             {/* General Information */}
             <div className="mb-10  shadow-md p-2 py-4 rounded-md border bg-gray50">
