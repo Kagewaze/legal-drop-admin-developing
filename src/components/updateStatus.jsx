@@ -15,6 +15,7 @@ export const UpdateStatus = ({
   });
 
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [refusal, setRefusal] = useState("");
 
   const { setGlobalLoading } = useGlobalContext();
 
@@ -43,6 +44,7 @@ export const UpdateStatus = ({
 
   async function handleUpdateStatus(e) {
     e.preventDefault();
+    setRefusal("");
     setGlobalLoading(true);
 
     let formPayload;
@@ -70,6 +72,15 @@ export const UpdateStatus = ({
       }
     } catch (error) {
       setGlobalLoading(false);
+      // The shared client announces 400, 404 and 409 and is silent on 403. A refusal here is the
+      // backend protecting an account (an administrator cannot be blocked or deactivated) or the
+      // signed-in account no longer being an administrator: say so instead of doing nothing.
+      if (error?.response?.status === 403) {
+        setRefusal(
+          error.response.data?.message ||
+            "This change was refused. You may not have permission to make it."
+        );
+      }
     }
   }
 
@@ -112,6 +123,15 @@ export const UpdateStatus = ({
                 </option>
               ))}
             </select>
+
+            {refusal ? (
+              <p
+                role="alert"
+                className=" mt-3 rounded-md border border-red-300 bg-red-50 p-2 text-sm text-red-800"
+              >
+                {refusal}
+              </p>
+            ) : null}
 
             {/* Submit button */}
             <div className=" border-t border-gray200 mt-4">
