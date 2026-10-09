@@ -16,6 +16,10 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { CreateOrder } from "./pages/createOrder";
 import { Contacts } from "./components/contacts";
+import { ModerationOverview } from "./pages/moderation";
+import { ModerationReports } from "./pages/moderationReports";
+import { ModerationReport } from "./pages/moderationReport";
+import { ModerationAudit } from "./pages/moderationAudit";
 
 function App() {
   return (
@@ -44,6 +48,10 @@ function App() {
             <Route path="unauthorized-page" element={<UnauthorizedPage />} />
             <Route path="create-order" element={<CreateOrder />} />
             <Route path="contacts" element={<Contacts />} />
+            <Route path="moderation" element={<ModerationOverview />} />
+            <Route path="moderation/reports" element={<ModerationReports />} />
+            <Route path="moderation/reports/:reportId" element={<ModerationReport />} />
+            <Route path="moderation/audit" element={<ModerationAudit />} />
           </Route>
         </Routes>
       </BrowserRouter>

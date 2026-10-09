@@ -9,7 +9,7 @@ import { TbUsers } from "react-icons/tb";
 import { IoCartOutline } from "react-icons/io5";
 import { PiMotorcycle } from "react-icons/pi";
 import { IoMdCreate } from "react-icons/io";
-import { MdOutlinePayment } from "react-icons/md";
+import { MdOutlinePayment, MdOutlineShield } from "react-icons/md";
 
 export const NavBar = () => {
   const [showSideBar, setSideBar] = useState(false);
@@ -59,6 +59,12 @@ export const NavBar = () => {
       linkName: "Payouts",
       linkUrl: "/payouts",
       icon: <MdOutlinePayment size={16} />,
+    },
+    {
+      id: 8,
+      linkName: "Moderation",
+      linkUrl: "/moderation",
+      icon: <MdOutlineShield size={16} />,
     },
   ], []);
 
