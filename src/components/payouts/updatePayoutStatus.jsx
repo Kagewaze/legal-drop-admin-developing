@@ -1,69 +1,83 @@
+/* eslint-disable react/prop-types -- this app declares no prop-types dependency; props are documented on each component. */
+// A status change by hand (PATCH /payouts/:id/status with `status` alone). ⚠️ Never Completed: since backend e6c0fa7 a
+// driver payout is completed only with the evidence of the payment that completes it (RecordManualPayment), and a
+// seller payout never by a status change. The backend's refusal is shown in place, not only as a toast.
 import { useState } from "react";
 import customFetch from "../../utils/customFetch";
-import { useGlobalContext } from "../../utils/context";
-import { SuccessModal } from "../modals/success";
-import { MdClose } from "react-icons/md";
+import { ErrorState, LoadingRows, Notice } from "../moderation/ui";
+import { primaryButton, secondaryButton } from "../moderation/styles";
+import { payoutStatusView, refusalMessage, statusChangeOptions } from "../../utils/payoutPayments";
+import { PayoutModal, PayoutSummary, StatusChangeForm } from "./payoutEvidence";
+import { usePayoutRecord } from "./usePayoutRecord";
 
+/** Props: id (payout), closeModal(), refresh() — reloads the list after a change. */
 export const UpdatePayoutStatus = ({ id, closeModal, refresh }) => {
-  const [status, setStatus] = useState("");
-  const [updateSuccess, setUpdateSuccess] = useState(false);
-  const { setGlobalLoading } = useGlobalContext();
+  const record = usePayoutRecord(id);
+  const { payout, evidence } = record;
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState("");
 
-  async function handleUpdateStatus(e) {
-    e.preventDefault();
-    setGlobalLoading(true);
-    const url = `/payouts/${id}/status`;
+  const close = () => {
+    if (!busy) closeModal(null);
+  };
+
+  async function save(event) {
+    event.preventDefault();
+    if (!value) return;
+    setBusy(true);
+    setError("");
     try {
-      const { status: resStatus } = await customFetch.patch(url, { status });
-      if (resStatus === 200) {
-        setGlobalLoading(false);
-        setUpdateSuccess(true);
-        if (refresh) refresh();
-      }
-    } catch (error) {
-      setGlobalLoading(false);
+      await customFetch.patch(`/payouts/${id}/status`, { status: value });
+      setSaved(value);
+      setValue("");
+      if (refresh) refresh();
+      await record.reload();
+    } catch (failure) {
+      setError(refusalMessage(failure));
+    } finally {
+      setBusy(false);
     }
   }
 
+  const ready = record.status === "ready" || record.status === "refreshing";
+  const canSave = ready && statusChangeOptions(payout, evidence).length > 0;
+
   return (
-    <article className="modalBG">
-      {updateSuccess ? (
-        <SuccessModal
-          closeModalFunction={setUpdateSuccess}
-          message={"Payout status changed successfully"}
-          closeParentModal={closeModal}
-        />
-      ) : (
-        <div className="longModalContainer border-4 px-4">
-          <div className="flex justify-between mb-4">
-            <p className="text-lg font-semibold text-gray900">Update Payout Status</p>
-            <button onClick={() => closeModal(false)}>
-              <MdClose size={24} className="text-gray500" />
+    <PayoutModal
+      title="Update payout status"
+      onClose={close}
+      busy={busy}
+      footer={
+        <>
+          <button type="button" className={secondaryButton} onClick={close} disabled={busy}>
+            {canSave ? "Cancel" : "Close"}
+          </button>
+          {canSave ? (
+            <button type="submit" form="payout-status-form" className={primaryButton} disabled={busy || !value}>
+              {busy ? "Saving…" : "Save status"}
             </button>
-          </div>
-          <form onSubmit={handleUpdateStatus}>
-            <select
-              name="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="border-gray300 text-gray900 bg-white inline-block w-full border rounded-lg py-2 pl-2 globalInputRingGreen"
-            >
-              <option value="" disabled>
-                Set payout status
-              </option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Transfer completed / manual settlement</option>
-              <option value="failed">Failed</option>
-            </select>
-            <div className="border-t border-gray200 mt-4">
-              <button type="submit" className="smallModalButton">
-                Submit
-              </button>
-            </div>
+          ) : null}
+        </>
+      }
+    >
+      {record.status === "loading" ? <LoadingRows label="Loading payout…" rows={3} /> : null}
+      {record.status === "error" ? <ErrorState error={record.error} onRetry={record.reload} /> : null}
+      {ready ? (
+        <>
+          <PayoutSummary payout={payout} evidence={evidence} />
+          {saved ? (
+            <Notice tone="success" title="Status updated">
+              The payout is now {payoutStatusView({ ...payout, status: saved }, evidence).label}.
+            </Notice>
+          ) : null}
+          <form id="payout-status-form" onSubmit={save} noValidate>
+            <StatusChangeForm payout={payout} evidence={evidence} value={value} onChange={setValue} disabled={busy} />
           </form>
-        </div>
-      )}
-    </article>
+          {error ? <Notice tone="error">{error}</Notice> : null}
+        </>
+      ) : null}
+    </PayoutModal>
   );
 };
