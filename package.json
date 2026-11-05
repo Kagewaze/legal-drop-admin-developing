@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "mock:api": "node mock/server.js",
     "dev:mock": "vite --config mock/vite.config.js",
-    "test": "node --test src/utils/driverReview.test.js src/utils/driverQualifications.test.js src/utils/partnerReferral.test.js src/utils/partnerCommission.test.js src/utils/paymentInvalidationReconciliation.test.js src/utils/authOtpErrors.test.js src/utils/orderCancellation.test.js src/utils/orderAssignment.test.js src/utils/moderation.test.js src/utils/moderationApi.test.js src/utils/moderationComponents.test.js src/utils/payoutPayments.test.js"
+    "test": "node --test src/utils/driverReview.test.js src/utils/driverQualifications.test.js src/utils/partnerReferral.test.js src/utils/partnerCommission.test.js src/utils/paymentInvalidationReconciliation.test.js src/utils/authOtpErrors.test.js src/utils/orderCancellation.test.js src/utils/orderAssignment.test.js src/utils/moderation.test.js src/utils/moderationApi.test.js src/utils/moderationComponents.test.js src/utils/payoutPayments.test.js src/utils/payoutMonitor.test.js"
   },
   "dependencies": {
     "axios": "^1.7.7",
